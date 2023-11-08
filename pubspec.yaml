@@ -27,9 +27,15 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+cupertino_icons: ^1.0.2 
+flutter_neumorphic: ^4.1.0  # Gantilah dengan versi yang sesuai
+
+
 dependencies:
   flutter:
     sdk: flutter
+  
+
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -39,6 +45,8 @@ dependencies:
   http: ^0.13.4
   location: ^4.4.0
   syncfusion_flutter_maps: ^20.2.44
+ 
+
 
 
 dev_dependencies:

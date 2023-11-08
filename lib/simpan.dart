@@ -1,26 +1,26 @@
 import 'dart:convert';
-
+import 'package:absen/model/home-response.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:location/location.dart';
-import 'package:absen/models/save-presensi-response.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_maps/maps.dart';
-import 'package:http/http.dart' as myHttp;
+import 'package:http/http.dart ' as myHttp;
+import 'model/save-presensi-response.dart';
 
-class SimpanPage extends StatefulWidget {
-  const SimpanPage({Key? key}) : super(key: key);
+class simpan extends StatefulWidget {
+  const simpan({super.key});
 
   @override
-  State<SimpanPage> createState() => _SimpanPageState();
+  State<simpan> createState() => _simpanState();
 }
 
-class _SimpanPageState extends State<SimpanPage> {
+class _simpanState extends State<simpan> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late Future<String> _token;
-
-  @override
+  HomeResponse? homeResponseModel;
+  Datum? hariIni;
+  List<Datum> riwayat = [];
+ Color customColor = Color.fromARGB(255, 218, 222, 241);
   void initState() {
     super.initState();
     _token = _prefs.then((SharedPreferences prefs) {
@@ -28,12 +28,12 @@ class _SimpanPageState extends State<SimpanPage> {
     });
   }
 
-  Future<LocationData?> _currenctLocation() async {
+  Future<LocationData?> _currenctlocation() async {
     bool serviceEnable;
-    PermissionStatus permissionGranted;
+    PermissionStatus permisssiongranted;
 
     Location location = new Location();
-
+    // print("coding :tengah");
     serviceEnable = await location.serviceEnabled();
 
     if (!serviceEnable) {
@@ -43,10 +43,11 @@ class _SimpanPageState extends State<SimpanPage> {
       }
     }
 
-    permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
+    permisssiongranted = await location.hasPermission();
+
+    if (permisssiongranted == PermissionStatus.denied) {
+      permisssiongranted = await location.requestPermission();
+      if (permisssiongranted != PermissionStatus.granted) {
         return null;
       }
     }
@@ -55,23 +56,23 @@ class _SimpanPageState extends State<SimpanPage> {
   }
 
   Future savePresensi(latitude, longitude) async {
-    SavePresensiResponseModel savePresensiResponseModel;
+    SavePresensiResponse savePresensiResponse;
     Map<String, String> body = {
       "latitude": latitude.toString(),
       "longitude": longitude.toString()
     };
 
     Map<String, String> headers = {'Authorization': 'Bearer ' + await _token};
-
+    
     var response = await myHttp.post(
-        Uri.parse("https://punyawa.com/presensi/public/api/"),
+        Uri.parse('http://10.0.2.2:8000/api/save-presensi'),
         body: body,
         headers: headers);
 
-    savePresensiResponseModel =
-        SavePresensiResponseModel.fromJson(json.decode(response.body));
+    savePresensiResponse =
+        SavePresensiResponse.fromJson(json.decode(response.body));
 
-    if (savePresensiResponseModel.success) {
+    if (savePresensiResponse.success) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Sukses simpan Presensi')));
       Navigator.pop(context);
@@ -85,17 +86,18 @@ class _SimpanPageState extends State<SimpanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Presensi"),
+        title: Text("presensi"),
       ),
+       backgroundColor:customColor,
       body: FutureBuilder<LocationData?>(
-          future: _currenctLocation(),
+          future: _currenctlocation(),
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.hasData) {
-              final LocationData currentLocation = snapshot.data;
-              print("KODING : " +
-                  currentLocation.latitude.toString() +
+              final LocationData currenctlocation = snapshot.data;
+              print("coding :" +
+                  currenctlocation.altitude.toString() +
                   " | " +
-                  currentLocation.longitude.toString());
+                  currenctlocation.longitude.toString());
               return SafeArea(
                   child: Column(
                 children: [
@@ -105,16 +107,16 @@ class _SimpanPageState extends State<SimpanPage> {
                       layers: [
                         MapTileLayer(
                           initialFocalLatLng: MapLatLng(
-                              currentLocation.latitude!,
-                              currentLocation.longitude!),
+                              currenctlocation.latitude!,
+                              currenctlocation.longitude!),
                           initialZoomLevel: 15,
                           initialMarkersCount: 1,
                           urlTemplate:
                               "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                           markerBuilder: (BuildContext context, int index) {
                             return MapMarker(
-                              latitude: currentLocation.latitude!,
-                              longitude: currentLocation.longitude!,
+                              latitude: currenctlocation.longitude!,
+                              longitude: currenctlocation.longitude!,
                               child: Icon(
                                 Icons.location_on,
                                 color: Colors.red,
@@ -125,15 +127,34 @@ class _SimpanPageState extends State<SimpanPage> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 20,
-                  ),
+                  SizedBox(height: 40.0),
                   ElevatedButton(
-                      onPressed: () {
-                        savePresensi(currentLocation.latitude,
-                            currentLocation.longitude);
-                      },
-                      child: Text("Simpan Presensi"))
+                    onPressed: () {
+                      savePresensi(currenctlocation.latitude,
+                          currenctlocation.longitude);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      primary: Color(0xFFEFF3F6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      shadowColor: Color.fromARGB(255, 180, 171, 182),
+                      elevation: 8,
+                    ),
+                    child: Container(
+                      height: 50,
+                      width: 150,
+                      child: Center(
+                        child: Text(
+                          "Simpan",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.black,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ));
             } else {
